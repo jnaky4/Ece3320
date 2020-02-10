@@ -45,5 +45,22 @@ clean :
 #-rm doesnt know how to remove more than one file so we -rf recursively removes
 
 
+#terminal commands
+#chmod +x commands.sh: adds executable to usercontrol
+#ls -l
+#./commands.sh runs shellscript file
+#mv commands.sh temp: moves commands into temp folder
+#cd ~ go to root directory
+#cd - return to last directory
+#make to use make file to build program
 
+#C++
+#include <iostream> 
+#cin: scanf
+#cout: printf
+#using namespace std;
+# cout << "Key in an integer value:\n";
+# << extraction operator
+# >> insertion operator
+# cin >> value;
 
