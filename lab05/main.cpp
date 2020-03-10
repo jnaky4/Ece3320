@@ -14,20 +14,29 @@ public:
 	
 };
 
+//class file_error : public std::file_error{
+//public:
+//    explicit file_error(const char* what_arg) : std::file_error(what_arg) {}
+//    explicit file_error(const std::string &what_arg) : file_error(what_arg) {}
+//
+//};
+
 
 int main(int argc, char** argv){
 	char fileName[50] = "validate/raw-data-valid/raw_data_";
-	char appendName[20] = "raw_data_";
+	char appendName[20] = "/raw_data_";
 	char fileOut[50] = "saved/";
 	char fileOut2[50] = "saved/";
 	FILE *fp;
 	FILE *op;
+	FILE *op2;
 	
 	int offSet = 0;
 	double scaler = 1.0;
 	double scalerOut = 0.0;
 	
 	char *strtodPtr;
+
 	
 	FILE *fout;
 	int filenum;
@@ -40,28 +49,28 @@ int main(int argc, char** argv){
 	int numLines;
 	int maxVal;
 	int convert;
-	
+
+	int order = 0;
+	/*
+	 * order 1: argument -s came before -a
+	 * order 2: argument -a came before -s
+	 */
 	int doScale = 0;
 	int doOffset = 0;
 	
-	/*
-	 * -n
-	 * -s
-	 * -a
-	 * -h
-	 * -d
-	 */
-	
 	try{
-		/*
+		/* Part 1: command line argument checks
+		 *      5 cases: -n -a -s -d -h
 		 * check for enough arguments:
 		 * 3 arguments is minimum ./demo -n 1 would create a file
 		 * except if -h, 2 arguments ./demo -h, no other arguments should be present
 		 */
+
+		/*
+		 * base case: not enough arguments
+		 */
 		if(argc < 3 && strcmp(argv[1], "-h") != 0){
-//			printf("%d\n",strcmp(argv[1], "-h"));
 			printf("%s\n", argv[1]);
-//			printf("not enough arguments:\n");
 			printf("%d argc\n", argc);
 			throw user_error("not enough arguments\n");
 		}
@@ -94,7 +103,7 @@ int main(int argc, char** argv){
 						}
 						
 						fileCheck = 1;
-						printf("%s\n", fileName);
+						printf("line 97: %s\n", fileName);
 	
 						
 					}
@@ -103,129 +112,192 @@ int main(int argc, char** argv){
 				/*
 				 * case 2: -a
 				 */
-				//TODO add check for doScale
 				else if(strcmp(argv[i], "-a") == 0){			
 					i++;
 					if(i >= argc){
 						throw user_error("no offset number");
-//						printf("no offset number");
-//						return 0;
 					}
 					doOffset = 1;
-					strcpy(fileName, argv[1]);	strcat(fileOut, "Offset_data_");
-					if(gThanTen != 0){
-						strcat(fileOut, filenumStr);
+					/*
+					 * if doScale -s arugment has already been passed then
+					 * offset data will be put in fileOut2
+					 */
+					if(doScale == 1){
+					    order = 1;
+                        strcat(fileOut2, "Offset_data_");
+
+                        if(gThanTen == 1){
+                            strcat(fileOut2, filenumStr);
+                        }
+                        else{
+                            strcat(fileOut2, "0");
+                            strcat(fileOut2, filenumStr);
+                        }
+                        strcat(fileOut2, ".txt");
+
+                        offSet = atoi(argv[i]);
+
+                        printf("offset by %d\n", offSet);
+                        printf("%s\n", fileOut2);
 					}
 					else{
-						strcat(fileOut, "0");
-						strcat(fileOut, filenumStr);
+
+                        strcat(fileOut, "Offset_data_");
+
+                        if(gThanTen == 1){
+                            strcat(fileOut, filenumStr);
+                        }
+                        else{
+                            strcat(fileOut, "0");
+                            strcat(fileOut, filenumStr);
+                        }
+                        strcat(fileOut, ".txt");
+
+                        offSet = atoi(argv[i]);
+
+                        printf("offset by %d\n", offSet);
+                        printf("%s\n", fileOut);
 					}
-					strcat(fileOut, ".txt");
-					
-					offSet = atoi(argv[i]);
-					
-					printf("offset by %d\n", offSet);
-					printf("%s\n", fileOut);
+
 					
 				}
 				
 				/*
 				 * case 3: -s
 				 */
-				
-				//TODO add check for doOffset
+
 				else if(strcmp(argv[i], "-s") == 0){
 					i++;
 					if(i >= argc){
 						throw user_error("no scaler number");
-//						printf("no scaler number");
-//						return 0;
 						}
 					doScale = 1;
-					
-					strcat(fileOut, "Scaled_data_");
-					if(gThanTen != 0){
-						strcat(fileOut, filenumStr);
+                    /*
+                     * if doOffset -a arugment has already been passed then
+                     * scale data will be put in fileOut2
+                     */
+					if(doOffset == 1){
+					    order = 2;
+                        strcat(fileOut2, "Scaled_data_");
+                        if(gThanTen != 0){
+                            strcat(fileOut2, filenumStr);
+                        }
+                        else{
+                            strcat(fileOut2, "0");
+                            strcat(fileOut2, filenumStr);
+                        }
+                        strcat(fileOut2, ".txt");
+                        printf("%s\n", fileOut2);
+                        scaler = strtod(argv[i], &strtodPtr);
+                        printf("scale by %.4f\n", scaler);
 					}
 					else{
-						strcat(fileOut, "0");
-						strcat(fileOut, filenumStr);
-					}//overwrite string
-					strcat(fileOut, ".txt");
-					printf("%s\n", fileOut);
-					scaler = strtod(argv[i], &strtodPtr);
-					printf("scale by %.4f\n", scaler);
+                        strcat(fileOut, "Scaled_data_");
+                        if(gThanTen != 0){
+                            strcat(fileOut, filenumStr);
+                        }
+                        else{
+                            strcat(fileOut, "0");
+                            strcat(fileOut, filenumStr);
+                        }//overwrite string
+                        strcat(fileOut, ".txt");
+                        printf("%s\n", fileOut);
+                        scaler = strtod(argv[i], &strtodPtr);
+                        printf("scale by %.4f\n", scaler);
+					}
+
 				}
 				/*
-				 * case 4:err -d
+				 * case 4: -d
 				 * if this is used, -n filename will be overwritten,
 				 * but the filenumber will be stored for fileOut
 				 * 
 				 */
 				
-				//TODO
+
 				else if(strcmp(argv[i], "-d") == 0){
 					i++;
 					if(i >= argc){
 						throw user_error("no new directory listed\n");
 					}
-					
-					strcpy(fileName, argv[i]);
-					//strcat(fileName, )
-						
-					
-					
-					
-					
-					
-					
-					
-					
-					
-					
+
+					printf("we are here now arent we?\n");
+					if(fileCheck == 1){
+					    sprintf(filenumStr, "%d", filenum);
+                        strcpy(fileName, argv[i]);
+                        strcat(fileName, appendName);
+                        if(gThanTen == 1){
+                            strcat(fileName, filenumStr);
+                        }
+                        else{
+                            strcat(fileName, "0");
+                            strcat(fileName, filenumStr);
+                        }
+                        strcat(fileName, ".txt");
+					}
+
 				}
 				else if(strcmp(argv[i], "-h") == 0){
-					printf("The program needs at least 3 arguments\n");
-					printf("-n followed by the file number\n");
-					printf("a file number 1 to 10\n");
-					printf("what to do with it, -s scale, -o offset\n");
-					printf("how much it sould scale of offset the values in the file\n");
+				    i = argc;
+					printf("The program needs at least 3 arguments to work and 5 to mainipulate the data\n");
+                    printf("1: ./hello to compile the makefile\n");
+					printf("2: -n followed by the file number\n");
+					printf("3: with a file number 1 to 10\n");
+					printf("or -d for a specific folder\n");
+					printf("4: what to do with it, -s scale, -o offset\n");
+					printf("5: how much it should scale or offset the values in the file\n");
 				}
 			}
 			if(fileCheck != 1){
 				throw user_error("no file to load from, nothing will happen\n");
-//				printf("no file to load from, nothing will happen\n");
 			}
 			
 		}
-	
 
-		/*
-		 * opens fileName to read and fileOut to write
-		 * 
+
+		/* Part 2: file read and write
+		 * opens a fileName to read in and a fileOut to write
+		 * if there is a -a and a -s then the program checks order variable
+		 * and there will be a fileout2
 		 */
 		fp = fopen(fileName, "r");
 		if (fp == NULL){
-			printf("Could not open file wookie %s",fileName);
-			return 1;
+		    throw user_error("could not open file");
 		}
 		fscanf(fp,"%d%d", &numLines, &maxVal);
 		printf("%d numlines\n", numLines);
 		printf("%d maxval\n", maxVal);
-		
-		printf("%s\n", fileOut);
-		op = fopen(fileOut, "w");
-		if (op == NULL){
-			printf("Could not open file wookie %s",fileOut);
-			return 1;
+
+
+		if(doScale == 1 && doOffset == 1){//order will be assigned
+            op = fopen(fileOut, "w");
+            op2 = fopen(fileOut2, "w");
+            if (op == NULL || op2 == NULL){
+                throw user_error("no file to save to one of operations -a or -s, nothing will happen\n");
+            }
+
+            if(order == 1){// -s came before -a
+                fprintf(op2, "%d %d\n", numLines, offSet);
+                fprintf(op, "%d %lf\n", numLines, scaler);
+            }
+            else{//Order is 2 -a came before -s
+                fprintf(op, "%d %d\n", numLines, offSet);
+                fprintf(op2, "%d %lf\n", numLines, scaler);
+            }
+
 		}
-		
-		if(doOffset == 1){
-			fprintf(op, "%d %d\n", numLines, offSet);
-		}
-		
-		if(doScale == 1){
-			fprintf(op, "%d %lf\n", numLines, scaler);
+		else{
+            printf("%s\n", fileOut);
+            op = fopen(fileOut, "w");
+            if (op == NULL){
+                throw user_error("no file to save to, nothing will happen\n");
+            }
+            if(doOffset == 1 && doScale == 0){
+                fprintf(op, "%d %d\n", numLines, offSet);
+            }
+            if(doScale == 1 && doOffset == 0){
+                fprintf(op, "%d %lf\n", numLines, scaler);
+            }
 		}
 		
 		
@@ -234,35 +306,48 @@ int main(int argc, char** argv){
 			fscanf(fp, "%d", &fileVal);
 	//		printf("%d\n", fileVal);
 	
-			if(doOffset == 1 && doScale == 0){
+			if(doOffset == 1){
 				
 	//			printf("%d offset\n", offSet);
 	//			printf("%d fileVal\n", fileVal);
 				fileVal = fileVal + offSet;
 	//			printf("%d added\n", fileVal);
-				fprintf(op, "%d\n", fileVal);
+	            if(order == 1){
+                    fprintf(op2, "%d\n", fileVal);
+	            }
+	            else{
+                    fprintf(op, "%d\n", fileVal);
+	            }
+
+
 			}
 			
-			if(doScale == 1 && doOffset == 0){
+			if(doScale == 1){
 				if(fileVal != 0){
 					scalerOut = ((double)fileVal * scaler);
 				}
 				else{
 					fileVal = 0;
 				}
-				
-				fprintf(op, "%lf\n", scalerOut);	
-			}	
-			if(doScale == 1 && doOffset == 1){
-				printf("Not gonna happen\n");
+				if(order == 2){
+                    fprintf(op2, "%lf\n", scalerOut);
+				}
+				else{
+                    fprintf(op, "%lf\n", scalerOut);
+				}
+
 			}
 		}	
 		fclose(op);
 		fclose(fp);
+		fclose(op2);
 	}
 	catch(user_error &err){
 		cerr << err.what() << endl;
 	}
+//	catch(file_error &err){
+//
+//	}
 	catch(...){
 		cerr << "something broke" << endl;
 	}
